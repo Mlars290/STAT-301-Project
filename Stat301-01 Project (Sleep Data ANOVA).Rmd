@@ -1,0 +1,223 @@
+---
+title: "STAT 301-01 (Sleep Data ANOVA)"
+author: "Izzy Mika"
+date: "2026-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Initialize/Setup
+
+```{r}
+#install.packages("tidyverse")
+#install.packages("readxl")
+#install.packages("nlme")
+#install.packages("multcomp")
+#install.packages("GGally")
+#install.packages("factoextra")
+#install.packages("ggplot2")
+#install.packages("stats")
+
+library(tidyverse)
+library(readxl)
+library(nlme)
+library(multcomp)
+library(GGally)
+library(factoextra)
+library(ggplot2)
+library(MASS)
+library(stats)
+
+# <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysis of Variance and Multivariate Analysis (ANOVA)/Data/___.xlsx")
+
+sleepData <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysis of Variance and Multivariate Analysis (ANOVA)/Project/Sleep_health_and_lifestyle_dataset.xlsx")
+
+```
+
+## Project / Data Notes
+
+**Data changes**
+* No missing values 
+* Updated column names to have no spaces 
+* Updated BMI_Cat: "Normal Weight" -> "Normal" (appears to be the same category based on data description and initial analysis)
+* BMI_Cat "Obese" only has 10 records out of 374. Deleting these.
+    Put this under data processing. Noticed on initial ANOVA analysis that the p-value / significance of Obese-Normal was always smaller than Overweight-Normal, which is a strange result. Double checked the original excel sheet to find that there is only 10 observations (small sample size can cause skewed analysis results). Deleting the 10 records to clean data. 
+
+* Converting Stress_Lvl to Stress_Lvl_Cat. Collapsing 10 categories to 3 categories. 
+    Lvl 1: <= 3
+    Lvl 2: <= 6
+    Lvl 3: > 6
+
+**Limitations**
+* Many IVs might impact results ?
+* Stress_Lvl_Cat: Level 1 has only 18% of the data set, but Level 2 and Level 3 are roughly equal. 
+
+
+**Notes from Class:**
+* Avoid using Physical Activity as an IV - should be treated as numeric variable more than categorical. 
+* Stress Level is already a categorical variable (just too many levels), so collapsing to 3 is OK. 
+* Collapsing Normal & Normal Weight to 1 category level is OK.
+* Box plot is not good for this project as it's for medians, not means.
+  	* Use bar chart (with the box plot on top?)
+
+
+
+## Data Analysis - Rough Draft
+
+Two-Way ANOVA
+
+364 Observations (10 deleted)
+1 DV: 
+  Sleep Duration
+  
+2 IVs:
+  BMI Category (2 Lvls - Normal, Overweight) 
+  Stress Level Category (3 Lvls - 1(Low), 2(Medium), 3(High))
+    Question: Would it be better to label these Low, Medium, High (vs 1, 2, 3)?
+
+
+**Hypotheses:**
+
+*Main Effects of BMI:*
+H_0: μ_Normal = μ_Overweight 
+H_a: μ_Normal != μ_Overweight 
+
+*Main Effects of Stress Level:*
+H_0: μ_1 = μ_2 = μ_3
+H_a: At least two means are different
+
+*Interaction:*
+H_0: There is no interaction between BMI and Stress Level
+H_a: There is an interaction between BMI and Stress Level
+
+
+```{r}
+# Checking if there is significant interaction between BMI_Cat and Stress_Lvl_Cat
+# --------------------------------------------------------------------------------
+
+#view(sleepData)
+sleepData
+
+# Factor IVs
+sleepData$BMI_Cat <- as.factor(sleepData$BMI_Cat)
+sleepData$Stress_Lvl_Cat <- as.factor(sleepData$Stress_Lvl_Cat)
+
+# Two-Way aov; Summary
+sleepModel <- aov(Sleep_Duration~BMI_Cat+Stress_Lvl_Cat+ BMI_Cat*Stress_Lvl_Cat, data=sleepData)
+summary(sleepModel)
+
+# TukeyHSD - Detailed Notes
+TukeyHSD(sleepModel)
+
+# Interaction Plot
+sleepData$Sleep_Duration <- as.numeric(sleepData$Sleep_Duration)
+interaction.plot(sleepData$BMI_Cat, sleepData$Stress_Lvl_Cat, sleepData$Sleep_Duration, fun=mean)
+
+
+
+```
+
+
+
+
+```{r}
+#   Filter to Diff BMI Categories, Test Between Each Stress Lvl Per BMI Cat
+#   ------------------------------------------------------------------------
+
+# Filter to Diff BMI Categories 
+normWeight <- sleepData %>% filter(BMI_Cat=="Normal")
+overweight <- sleepData %>% filter(BMI_Cat=="Overweight")
+obese <- sleepData %>% filter(BMI_Cat=="Obese")
+#normWeight
+
+
+
+# What is the test statistic and p-value for comparing the mean sleep duration difference between stress level categories? 
+#   Is there any significant difference between stress levels? 
+# --------------------------------------------------------------------------------------------------------
+
+# For BMI Category "Normal": 
+# DV~IV, data = __
+normWeight_AOV <- aov(Sleep_Duration~Stress_Lvl_Cat, data=normWeight)
+normWeight_Tukey <-TukeyHSD(normWeight_AOV, conf.level=.95)
+
+summary(normWeight_AOV)
+normWeight_Tukey
+
+
+# For BMI Category "Overweight": 
+# DV~IV, data = __
+overweight_AOV <- aov(Sleep_Duration~Stress_Lvl_Cat, data=overweight)
+overweight_Tukey <-TukeyHSD(overweight_AOV, conf.level=.95)
+
+summary(overweight_AOV)
+overweight_Tukey
+
+
+```
+
+
+
+
+```{r}
+#   Filter to Diff Stress Level Categories, Test Between Each BMI Cat Per Stress Level 
+#   ------------------------------------------------------------------------
+# Filter to Diff Stress Level Categories 
+lowStress <- sleepData %>% filter(Stress_Lvl_Cat==1)
+medStress <- sleepData %>% filter(Stress_Lvl_Cat==2)
+highStress <- sleepData %>% filter(Stress_Lvl_Cat==3)
+
+
+# What is the test statistic and p-value for comparing the mean sleep duration difference between BMI Categories? 
+#   Is there any significant difference between BMI Categories? 
+# --------------------------------------------------------------------------------------------------------
+
+# Low Stress
+#   **Code: t.test(DV~IV, data = ___, alternative = "two.sided")
+#       Note: significant difference == "two.sided"
+t.test(Sleep_Duration~BMI_Cat, data = lowStress, alternative = "two.sided")
+
+
+# Medium Stress
+t.test(Sleep_Duration~BMI_Cat, data = medStress, alternative = "two.sided")
+
+
+# High Stress
+t.test(Sleep_Duration~BMI_Cat, data = highStress, alternative = "two.sided")
+
+
+
+
+
+# For Stress Lvl 1 (Low): 
+# DV~IV, data = __
+#lowStress_AOV <- aov(Sleep_Duration~BMI_Cat, data=lowStress)
+#lowStress_Tukey <-TukeyHSD(lowStress_AOV, conf.level=.95)
+
+#summary(lowStress_AOV)
+#lowStress_Tukey
+
+
+# For Stress Lvl 2 (Medium): 
+# DV~IV, data = __
+#medStress_AOV <- aov(Sleep_Duration~BMI_Cat, data=medStress)
+#medStress_Tukey <-TukeyHSD(medStress_AOV, conf.level=.95)
+
+#summary(medStress_AOV)
+#medStress_Tukey
+
+
+# For Stress Lvl 3 (High): 
+# DV~IV, data = __
+#highStress_AOV <- aov(Sleep_Duration~BMI_Cat, data=highStress)
+#highStress_Tukey <-TukeyHSD(highStress_AOV, conf.level=.95)
+
+#summary(highStress_AOV)
+#highStress_Tukey
+
+```
+
