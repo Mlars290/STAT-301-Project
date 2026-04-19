@@ -40,19 +40,20 @@ sleepData <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysi
 
 ## Project / Data Notes
 
-**Data changes**
+**Data Changes:**
 * No missing values 
 * Updated column names to have no spaces 
-* Updated BMI_Cat: "Normal Weight" -> "Normal" (appears to be the same category based on data description and initial analysis)
-* BMI_Cat "Obese" only has 10 records out of 374. Deleting these.
-    Put this under data processing. Noticed on initial ANOVA analysis that the p-value / significance of Obese-Normal was always smaller than Overweight-Normal, which is a strange result. Double checked the original excel sheet to find that there is only 10 observations (small sample size can cause skewed analysis results). Deleting the 10 records to clean data. 
+* Updated BMI_Cat: Changed records marked as "Normal Weight" -> "Normal" (appears to be the same category, based on data description and initial analysis)
+
+* BMI_Cat "Obese" only has 10 records out of 374. Deleting these records.
+    Need to put this under data processing / interesting finds. Noticed during initial ANOVA analysis that the p-value / significance of Obese-Normal was always smaller than Overweight-Normal, which is a strange result. Double checked the original excel sheet to find that there is only 10 observations (small sample size can cause skewed analysis results). Deleting the 10 records to clean data. 
 
 * Converting Stress_Lvl to Stress_Lvl_Cat. Collapsing 10 categories to 3 categories. 
     Lvl 1: <= 3
     Lvl 2: <= 6
     Lvl 3: > 6
 
-**Limitations**
+**Limitations:**
 * Many IVs might impact results ?
 * Stress_Lvl_Cat: Level 1 has only 18% of the data set, but Level 2 and Level 3 are roughly equal. 
 
@@ -80,7 +81,7 @@ Two-Way ANOVA
     Question: Would it be better to label these Low, Medium, High (vs 1, 2, 3)?
 
 
-**Hypotheses:**
+**Hypotheses?:**
 
 *Main Effects of BMI:*
 H_0: μ_Normal = μ_Overweight 
