@@ -150,6 +150,8 @@ overweight <- sleepData %>% filter(BMI_Cat=="Overweight")
 normWeightModel <- lm(Sleep_Duration~Stress_Lvl_Cat, data = normWeight)
 Anova(normWeightModel, type = "II")
 
+#TukeyHSD(normWeightModel)
+
 
 # For BMI Category "Overweight": 
 #   **Code: model <- lm(DV~IV1+IV2 + IV1*IV2, data = __)
@@ -191,5 +193,34 @@ t.test(Sleep_Duration~BMI_Cat, data = highStress, alternative = "two.sided")
 
 
 
+```
+
+
+```{r}
+
+# Bar Chart - Mean Sleep Duration by Stress Level and BMI Category 
+summary_data <- sleepData %>%
+  group_by(Stress_Lvl_Cat, BMI_Cat) %>%
+  summarise(mean_sleep = mean(Sleep_Duration), se = sd(Sleep_Duration)/sqrt(n()))
+
+summary_data$Stress_Lvl_Cat <- factor(summary_data$Stress_Lvl_Cat, 
+                                      levels = c(1,2,3), 
+                                      labels = c("Low (≤3)", "Medium (4-6)", "High (>6)"))
+
+p <- ggplot(summary_data, aes(x = Stress_Lvl_Cat, y = mean_sleep, fill = BMI_Cat))
+
+p <- p + geom_bar(stat = "identity", position = "dodge")
+
+p <- p + geom_errorbar(aes(ymin = mean_sleep - se, ymax = mean_sleep + se), 
+                       position = position_dodge(0.9), width = 0.25)
+
+p <- p + labs(title = "Mean Sleep Duration by Stress Level and BMI Category", 
+              x = "Stress Level Category", 
+              y = "Mean Sleep Duration (hours)", 
+              fill = "BMI Category")
+
+p <- p + theme_minimal()
+
+p
 ```
 
