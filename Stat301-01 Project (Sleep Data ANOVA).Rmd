@@ -122,7 +122,10 @@ Anova(sleepModel, type = "II")
 
 # Interaction Plot
 sleepData$Sleep_Duration <- as.numeric(sleepData$Sleep_Duration)
-interaction.plot(sleepData$BMI_Cat, sleepData$Stress_Lvl_Cat, sleepData$Sleep_Duration, fun=mean)
+interaction.plot(sleepData$BMI_Cat, sleepData$Stress_Lvl_Cat, sleepData$Sleep_Duration, fun=mean,
+                 xlab = "BMI Category",
+                 ylab = "Mean Sleep Duration (hours)",
+                 trace.label = "Stress Level")
 
 
 
