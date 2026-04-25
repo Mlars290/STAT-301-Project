@@ -1,6 +1,6 @@
 ---
 title: "STAT 301-01 (Sleep Data ANOVA)"
-author: "Izzy Mika"
+author: "Izzy Mika, Maria Larson, Jiaming Zhang."
 date: "2026-04-19"
 output: html_document
 ---
@@ -42,75 +42,69 @@ sleepData <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysi
 ## Project / Data Notes
 
 **Data Changes:**
-* No missing values 
-* Updated column names to have no spaces 
-* Updated BMI_Cat: Changed records marked as "Normal Weight" -> "Normal" (appears to be the same category, based on data description and initial analysis)
-
-* BMI_Cat "Obese" only has 10 records out of 374. Deleting these records.
-    Need to put this under data processing / interesting finds. Noticed during initial ANOVA analysis that the p-value / significance of Obese-Normal was always smaller than Overweight-Normal, which is a strange result. Double checked the original excel sheet to find that there is only 10 observations (small sample size can cause skewed analysis results). Deleting the 10 records to clean data. 
-
-* Converting Stress_Lvl to Stress_Lvl_Cat. Collapsing 10 categories to 3 categories. 
-    Lvl 1: <= 3
-    Lvl 2: <= 6
-    Lvl 3: > 6
+* No missing values were present.
+* Column names were updated to remove spaces for consistency.
+* Updated BMI_Cat: combined "Normal Weight" --> "Normal" (same category, based on data description)
+* BMI_Cat "Obese" (n = 10 out of 374) was removed due to a small sample size, which could skew results
+* Converting Stress_Lvl to Stress_Lvl_Cat by collapsing into 3 levels: 
+    * Low (≤3)
+    * Medium (4-6)
+    * High (>6)
 
 **Limitations:**
-* Many IVs might impact results ?
-* Stress_Lvl_Cat: Level 1 has only 18% of the data set, but Level 2 and Level 3 are roughly equal. 
-    UPDATE: Data is unbalanced - updated code to use lm() instead of aov() when applicable.
-
-**Notes from Class:**
-* Avoid using Physical Activity as an IV - should be treated as numeric variable more than categorical. 
-* Stress Level is already a categorical variable (just too many levels), so collapsing to 3 is OK. 
-* Collapsing Normal & Normal Weight to 1 category level is OK.
-* Box plot is not good for this project as it's for medians, not means.
-  	* Use bar chart (with the box plot on top?)
+* Data are unbalanced across groups.
+* Stress Level Category: Low represents approximately -18% of the dataset, while Medium and High are more balanced.
+* Other variables (e.g., age, physical activity, occupation) may influence sleep duration but were not included.
 
 
+**Notes:**
+* Used lm() with Type II ANOVA of aov() due to unbalanced data.
+* Physical activity was excluded as an IV since it is more appropriate as a continuous variable.
+* Stress level was originally categorical but had too many levels, so collapsing into 3 was appropriate.
+* Combining "Normal" and "Normal Weight" is justified.
+
+**Visualization Notes:**
+* Box plots were avoided since they emphasize medians rather than means.
+* Bar charts/interaction plots were used to better represent mean differences.
 
 ## Data Analysis - Rough Draft
 
 Two-Way ANOVA
 
-364 Observations (10 deleted)
+364 observations (10 deleted)
+
 1 DV: 
   Sleep Duration
   
 2 IVs:
-  BMI Category (2 Lvls - Normal, Overweight) 
-  Stress Level Category (3 Lvls - 1(Low), 2(Medium), 3(High))
-    Question: Would it be better to label these Low, Medium, High (vs 1, 2, 3)?
+  BMI Category (2 levels: Normal, Overweight)
+  Stress Level Category (3 levels: Low, Medium, High)
 
+**Hypotheses:**
 
-**Hypotheses?:**
-
-*Main Effects of BMI:*
+*Main Effect of BMI:*
 H_0: μ_Normal = μ_Overweight 
-H_a: μ_Normal != μ_Overweight 
+H_a: μ_Normal ≠ μ_Overweight 
 
-*Main Effects of Stress Level:*
-H_0: μ_1 = μ_2 = μ_3
-H_a: At least two means are different
+*Main Effect of Stress Level Category:*
+H_0: μ_Low = μ_Medium = μ_High
+H_a: At least one group mean differs
 
 *Interaction:*
-H_0: There is no interaction between BMI and Stress Level
-H_a: There is an interaction between BMI and Stress Level
+H_0: There is no interaction between BMI and stress level category
+H_a: There is an interaction between BMI and stress level category
 
 
 ```{r}
-# Checking if there is significant interaction between BMI_Cat and Stress_Lvl_Cat
+# Checking if there is a significant interaction between BMI_Cat and Stress_Lvl_Cat
 # --------------------------------------------------------------------------------
 
-#view(sleepData)
-sleepData
-
-# Note: Stress_Lvl_Cat has unbalanced design (BMI_Cat also?).
+# Note: Data are unbalanced across groups (especially Stress_Lvl_Cat)
 table(sleepData$BMI_Cat)
 table(sleepData$Stress_Lvl_Cat)
 
 # Factor IVs
 sleepData$BMI_Cat <- as.factor(sleepData$BMI_Cat)
-sleepData$Stress_Lvl_Cat <- as.factor(sleepData$Stress_Lvl_Cat)
 
 
 # Two-Way ANOVA (Unbalanced); Summary
@@ -121,8 +115,19 @@ Anova(sleepModel, type = "II")
 
 
 # Interaction Plot
-sleepData$Sleep_Duration <- as.numeric(sleepData$Sleep_Duration)
-interaction.plot(sleepData$BMI_Cat, sleepData$Stress_Lvl_Cat, sleepData$Sleep_Duration, fun=mean,
+
+# Convert stress level to categorical factor with labels
+sleepData$Stress_Lvl_Cat <- factor(
+  sleepData$Stress_Lvl_Cat,
+  levels = c(1,2,3),
+  labels = c("Low", "Medium", "High")
+)
+
+sleepData$Sleep_Duration <- as.numeric(as.character(sleepData$Sleep_Duration))
+interaction.plot(sleepData$BMI_Cat,
+                 sleepData$Stress_Lvl_Cat,
+                 sleepData$Sleep_Duration,
+                 fun=mean,
                  xlab = "BMI Category",
                  ylab = "Mean Sleep Duration (hours)",
                  trace.label = "Stress Level")
@@ -133,8 +138,8 @@ interaction.plot(sleepData$BMI_Cat, sleepData$Stress_Lvl_Cat, sleepData$Sleep_Du
 
 
 
-
 ```{r}
+
 #   Filter to Diff BMI Categories, Test Between Each Stress Lvl Per BMI Cat
 #   ------------------------------------------------------------------------
 
@@ -169,12 +174,13 @@ Anova(overweightModel, type = "II")
 
 
 ```{r}
+
 #   Filter to Diff Stress Level Categories, Test Between Each BMI Cat Per Stress Level 
 #   ------------------------------------------------------------------------
 # Filter to Diff Stress Level Categories 
-lowStress <- sleepData %>% filter(Stress_Lvl_Cat==1)
-medStress <- sleepData %>% filter(Stress_Lvl_Cat==2)
-highStress <- sleepData %>% filter(Stress_Lvl_Cat==3)
+lowStress <- sleepData %>% filter(Stress_Lvl_Cat=="Low")
+medStress <- sleepData %>% filter(Stress_Lvl_Cat=="Medium")
+highStress <- sleepData %>% filter(Stress_Lvl_Cat=="High")
 
 
 # What is the test statistic and p-value for comparing the mean sleep duration difference between BMI Categories? 
@@ -199,9 +205,11 @@ t.test(Sleep_Duration~BMI_Cat, data = highStress, alternative = "two.sided")
 ```
 
 
+
 ```{r}
 
 # Bar Chart - Mean Sleep Duration by Stress Level and BMI Category 
+
 summary_data <- sleepData %>%
   group_by(Stress_Lvl_Cat, BMI_Cat) %>%
   summarise(mean_sleep = mean(Sleep_Duration), se = sd(Sleep_Duration)/sqrt(n()))
@@ -225,5 +233,6 @@ p <- p + labs(title = "Mean Sleep Duration by Stress Level and BMI Category",
 p <- p + theme_minimal()
 
 p
+
 ```
 
