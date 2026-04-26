@@ -52,22 +52,17 @@ sleepData <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysi
     * High (>6)
 
 **Limitations:**
-* Data are unbalanced across groups.
+* Data are unbalanced across groups. Used lm() with Type II ANOVA of aov() to handle this. 
 * Stress Level Category: Low represents approximately -18% of the dataset, while Medium and High are more balanced.
 * Other variables (e.g., age, physical activity, occupation) may influence sleep duration but were not included.
-
-
-**Notes:**
-* Used lm() with Type II ANOVA of aov() due to unbalanced data.
 * Physical activity was excluded as an IV since it is more appropriate as a continuous variable.
-* Stress level was originally categorical but had too many levels, so collapsing into 3 was appropriate.
-* Combining "Normal" and "Normal Weight" is justified.
 
 **Visualization Notes:**
 * Box plots were avoided since they emphasize medians rather than means.
 * Bar charts/interaction plots were used to better represent mean differences.
 
-## Data Analysis - Rough Draft
+
+## Data Analysis
 
 Two-Way ANOVA
 
@@ -99,13 +94,13 @@ H_a: There is an interaction between BMI and stress level category
 # Checking if there is a significant interaction between BMI_Cat and Stress_Lvl_Cat
 # --------------------------------------------------------------------------------
 
+# Convert BMI IV to Factor
+sleepData$BMI_Cat <- as.factor(sleepData$BMI_Cat)
+sleepData$Stress_Lvl_Cat <- factor(sleepData$Stress_Lvl_Cat , levels = c("Low", "Medium", "High"), ordered = TRUE)  
+
 # Note: Data are unbalanced across groups (especially Stress_Lvl_Cat)
 table(sleepData$BMI_Cat)
 table(sleepData$Stress_Lvl_Cat)
-
-# Factor IVs
-sleepData$BMI_Cat <- as.factor(sleepData$BMI_Cat)
-
 
 # Two-Way ANOVA (Unbalanced); Summary
 #   **Code: model <- lm(DV~IV1+IV2 + IV1*IV2, data = __)
@@ -115,14 +110,6 @@ Anova(sleepModel, type = "II")
 
 
 # Interaction Plot
-
-# Convert stress level to categorical factor with labels
-sleepData$Stress_Lvl_Cat <- factor(
-  sleepData$Stress_Lvl_Cat,
-  levels = c(1,2,3),
-  labels = c("Low", "Medium", "High")
-)
-
 sleepData$Sleep_Duration <- as.numeric(as.character(sleepData$Sleep_Duration))
 interaction.plot(sleepData$BMI_Cat,
                  sleepData$Stress_Lvl_Cat,
@@ -131,7 +118,6 @@ interaction.plot(sleepData$BMI_Cat,
                  xlab = "BMI Category",
                  ylab = "Mean Sleep Duration (hours)",
                  trace.label = "Stress Level")
-
 
 
 ```
@@ -215,7 +201,7 @@ summary_data <- sleepData %>%
   summarise(mean_sleep = mean(Sleep_Duration), se = sd(Sleep_Duration)/sqrt(n()))
 
 summary_data$Stress_Lvl_Cat <- factor(summary_data$Stress_Lvl_Cat, 
-                                      levels = c(1,2,3), 
+                                      levels = c("Low","Medium","High"), 
                                       labels = c("Low (≤3)", "Medium (4-6)", "High (>6)"))
 
 p <- ggplot(summary_data, aes(x = Stress_Lvl_Cat, y = mean_sleep, fill = BMI_Cat))
