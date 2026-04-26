@@ -94,7 +94,7 @@ H_a: There is an interaction between BMI and stress level category
 # Checking if there is a significant interaction between BMI_Cat and Stress_Lvl_Cat
 # --------------------------------------------------------------------------------
 
-# Convert BMI IV to Factor
+# Convert IVs to Factor Variables
 sleepData$BMI_Cat <- as.factor(sleepData$BMI_Cat)
 sleepData$Stress_Lvl_Cat <- factor(sleepData$Stress_Lvl_Cat , levels = c("Low", "Medium", "High"), ordered = TRUE)  
 
