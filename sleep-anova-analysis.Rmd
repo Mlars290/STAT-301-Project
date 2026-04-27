@@ -35,7 +35,7 @@ library(stats)
 
 # <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysis of Variance and Multivariate Analysis (ANOVA)/Data/___.xlsx")
 
-sleepData <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysis of Variance and Multivariate Analysis (ANOVA)/Project/Sleep_health_and_lifestyle_dataset.xlsx")
+sleepData <- read_excel("C:/Users/helix/Documents/MetroState/STAT 301-01 Analysis of Variance and Multivariate Analysis (ANOVA)/Project/sleep_health.xlsx")
 
 ```
 
